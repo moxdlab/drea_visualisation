@@ -24,8 +24,12 @@ class ControllerViewModel: ViewModel() {
     val fingerPos: LiveData<List<Float>>
         get() = _fingerPos
 
+    private val _buttonPress: MutableLiveData<Boolean> = MutableLiveData(false)
+    val buttonPress: LiveData<Boolean>
+        get() = _buttonPress
 
-    private var _serialPort: SerialPort = SerialPort("/dev/cu.usbserial-1440")
+
+    private val _serialPort: SerialPort = SerialPort("/dev/cu.usbserial-1440")
 
     init {
         // replace with your Arduino's serial port name
@@ -50,7 +54,7 @@ class ControllerViewModel: ViewModel() {
                     }else if (c == '\n'){
                         error = false
                     }else if (error) continue
-                    if(c == 'T' || c == 'A' || c == 'P'){
+                    if(c == 'T' || c == 'A' || c == 'P' || c == 'B'){
                         currentDataType = c
                         buffer = ""
                     }else if(c == 'e'){
@@ -68,6 +72,9 @@ class ControllerViewModel: ViewModel() {
                         }else if(currentDataType == 'P'){
                             _fingerPos.value = buildPos
                             buildPos = mutableListOf()
+                        }else if(currentDataType == 'B'){
+                            _buttonPress.value = buffer.toInt() != 0
+                            if(_buttonPress.value) println("Pressed")
                         }
                         buffer = ""
                     }else{

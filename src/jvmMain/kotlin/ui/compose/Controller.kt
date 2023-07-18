@@ -20,12 +20,17 @@ import viewmodel.ControllerViewModel
 
 @Composable
 @Preview
-fun Controller(modifier: Modifier = Modifier, fingerCount: Int) {
+fun Controller(modifier: Modifier = Modifier, fingerCount: Int, buttonPress: Boolean) {
+    val color = if(buttonPress){
+        Color.Red
+    }else{
+        Color.Gray
+    }
     Box(
         modifier = modifier
             .size(250.dp, 250.dp)
             .clip(CircleShape)
-            .background(Color.Gray)
+            .background(color)
             .wrapContentSize(Alignment.Center)
     ){
         Text(fingerCount.toString(), style = TextStyle(fontSize = 50.sp, color = Color.White))

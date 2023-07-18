@@ -12,26 +12,25 @@ import viewmodel.ControllerViewModel
 
 @Composable
 @Preview
-fun ControllerVisualisation(modifier: Modifier = Modifier.fillMaxSize(), viewModel: ControllerViewModel) {
+fun ControllerVisualisation(viewModel: ControllerViewModel) {
 
     val fingerCount by viewModel.fingerCount.observeAsState()
     val pointerAngle by viewModel.pointerAngle.observeAsState()
     val fingerPos by viewModel.fingerPos.observeAsState()
+    val buttonPress by viewModel.buttonPress.observeAsState()
 
     Row (
-        modifier = modifier,
+        modifier = Modifier.fillMaxSize(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ){
+        Config(viewModel)
         Box{
-            Controller(modifier = Modifier.align(Alignment.Center), fingerCount)
+            Controller(modifier = Modifier.align(Alignment.Center), fingerCount, buttonPress)
             //SnapPoints(viewModel.motorConfig.stepsOnFingerCount[fingerCount])
             SnapPoints(12)
             Pointer(currentAngle = -pointerAngle)
             Touches(fingerPos)
-
         }
-
-        Config(viewModel)
     }
 }

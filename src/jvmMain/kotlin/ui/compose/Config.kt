@@ -16,17 +16,17 @@ import viewmodel.ControllerViewModel
 @Composable
 fun Config(viewModel: ControllerViewModel){
     Column (
-        modifier = Modifier.fillMaxSize(),
+        //modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly
     ){
         for (i in 0 until viewModel.motorConfig.stepsOnFingerCount.size){
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                //modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text("FingerCount: $i")
+                Text("FingerCount: $i", modifier = Modifier.padding(20.dp))
                 ChangeButtons(viewModel, i)
             }
 
@@ -37,6 +37,7 @@ fun Config(viewModel: ControllerViewModel){
 @Composable
 fun ChangeButtons(viewModel: ControllerViewModel, index:Int){
 
+    var x = viewModel.motorConfig.stepsOnFingerCount[index]
 
     Row (
         verticalAlignment = Alignment.CenterVertically,
