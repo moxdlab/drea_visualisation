@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import viewmodel.ControllerViewModel
 
+val SIZE = 2
 
 @Composable
 @Preview
@@ -28,12 +29,12 @@ fun Controller(modifier: Modifier = Modifier, fingerCount: Int, buttonPress: Boo
     }
     Box(
         modifier = modifier
-            .size(250.dp, 250.dp)
+            .size((250*SIZE).dp, (250*SIZE).dp)
             .clip(CircleShape)
             .background(color)
             .wrapContentSize(Alignment.Center)
     ){
-        Text(fingerCount.toString(), style = TextStyle(fontSize = 50.sp, color = Color.White))
+        Text(fingerCount.toString(), style = TextStyle(fontSize = (50*SIZE).sp, color = Color.White))
     }
 }
 
@@ -49,14 +50,14 @@ fun SnapPoints(numberOfSnapPoints: Int) {
 @Composable
 fun SnapPointsSurface(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.size(100.dp, 100.dp)
+        modifier = modifier.size((100*SIZE).dp, (100*SIZE).dp)
     ) {
         Tick(
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(y = 150.dp),
-            10,
-            1,
+                .offset(y = (150*SIZE).dp),
+            10*SIZE,
+            1*SIZE,
             Color.Blue
         )
     }
@@ -65,14 +66,14 @@ fun SnapPointsSurface(modifier: Modifier = Modifier) {
 @Composable
 fun Pointer(modifier: Modifier = Modifier.fillMaxSize(), currentAngle: Float){
     Box(
-        modifier = modifier.size(100.dp, 100.dp).rotate(currentAngle)
+        modifier = modifier.size((100*SIZE).dp, (100*SIZE).dp).rotate(currentAngle)
     ) {
         Tick(
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(y = 150.dp),
-            20,
-            3,
+                .offset(y = (150*SIZE).dp),
+            20*SIZE,
+            3*SIZE,
             Color.Red
         )
     }
@@ -92,24 +93,21 @@ fun Tick(modifier: Modifier = Modifier, length: Int, width: Int, color:Color) {
 @Composable
 fun Touches(fingerPos: List<Float>) {
     for (i in fingerPos.indices) {
-        //It is 361 when not set
-        if(fingerPos[i]!=361f){
-            Touch(modifier = Modifier.fillMaxSize().rotate(fingerPos[i]/2), fingerPos[i]/2)
-        }
+        Touch(modifier = Modifier.fillMaxSize().rotate(fingerPos[i]/2), fingerPos[i]/2)
     }
 }
 
 @Composable
 fun Touch(modifier: Modifier = Modifier.fillMaxSize(), currentAngle: Float){
     Box(
-        modifier = modifier.size(100.dp, 100.dp).rotate(currentAngle)
+        modifier = modifier.size((100*SIZE).dp, (100*SIZE).dp).rotate(currentAngle)
     ) {
         Tick(
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(y = 120.dp),
-            3,
-            20,
+                .offset(y = (120*SIZE).dp),
+            3*SIZE,
+            20*SIZE,
             Color.Green
         )
     }

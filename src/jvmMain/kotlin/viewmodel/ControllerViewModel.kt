@@ -5,6 +5,7 @@ import dev.icerock.moko.mvvm.livedata.MutableLiveData
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import jssc.SerialPort
 import model.MotorConfig
+import java.time.Instant
 
 
 class ControllerViewModel: ViewModel() {
@@ -20,7 +21,7 @@ class ControllerViewModel: ViewModel() {
     val pointerAngle: LiveData<Float>
         get() = _pointerAngle
 
-    private val _fingerPos: MutableLiveData<List<Float>> = MutableLiveData(listOf(0f,0f,0f,0f,0f))
+    private val _fingerPos: MutableLiveData<List<Float>> = MutableLiveData(listOf())
     val fingerPos: LiveData<List<Float>>
         get() = _fingerPos
 
@@ -34,51 +35,57 @@ class ControllerViewModel: ViewModel() {
     init {
         // replace with your Arduino's serial port name
         _serialPort.openPort()
-        _serialPort.setParams(9600, 8, 1, 0)
+        _serialPort.setParams(115200, 8, 1, 0)
 
+        var time = Instant.now()
+        var counter = 0;
 
         var buffer = ""
-        var currentDataType = 'X'
-        var buildPos = mutableListOf<Float>()
-        var error = false
-
-
-
         _serialPort.addEventListener { event ->
             if (event.isRXCHAR) {
                 val data = _serialPort.readBytes(event.eventValue)
                 for (c in String(data)){
-                    if (c == '[' && !error){
-                        error=true;
-                        println("Error")
-                    }else if (c == '\n'){
-                        error = false
-                    }else if (error) continue
-                    if(c == 'T' || c == 'A' || c == 'P' || c == 'B'){
-                        currentDataType = c
-                        buffer = ""
-                    }else if(c == 'e'){
-                        if(currentDataType == 'P'){
-                            buildPos.add(buffer.toFloat())
+                    if(c == '#'){
+                        if(buffer.startsWith("#")){
+                            //println(buffer)
+                            try {
+                                val fields = buffer.substring(1).split(";").map { it.toInt() }
+                                if(fields[fields.size-1] == buffer.length){
+                                    //Button
+                                    val pressed = fields[0] != 0
+                                    //if(_buttonPress.value != pressed)
+                                    _buttonPress.value = pressed
+                                    //Pointer Angle
+                                    val angle = fields[1].toFloat()/100
+                                    //if(_pointerAngle.value != angle)
+                                        _pointerAngle.value = angle
+                                    //Finger count
+                                    //if(_fingerCount.value != fields[2])
+                                        _fingerCount.value = fields[2]
+                                    //Finger pos
+                                    val positions = mutableListOf<Float>()
+                                    for (i in 0 until fields[2]){
+                                        positions.add(fields[3+i].toFloat()/100)
+                                    }
+                                    //if(_fingerPos.value != positions)
+                                        _fingerPos.value = positions
+                                }else{
+                                    println("Error: False package length")
+                                }
+                            }catch (_: NumberFormatException){
+                                println("Error: Not an Integer")
+                            }
                         }
-                        buffer = ""
-                    }else if(c == 'E'){
-                        if(currentDataType == 'T'){
-                            if(_fingerCount.value != buffer.toInt())
-                                _fingerCount.value = buffer.toInt()
-                        }else if(currentDataType == 'A'){
-                            if(_pointerAngle.value != buffer.toFloat())
-                                _pointerAngle.value = buffer.toFloat()
-                        }else if(currentDataType == 'P'){
-                            _fingerPos.value = buildPos
-                            buildPos = mutableListOf()
-                        }else if(currentDataType == 'B'){
-                            _buttonPress.value = buffer.toInt() != 0
-                            if(_buttonPress.value) println("Pressed")
+                        buffer = "#"
+
+                        counter++
+                        if(time.epochSecond+1 < Instant.now().epochSecond){
+                            time = Instant.now()
+                            println(counter)
+                            counter = 0
                         }
-                        buffer = ""
                     }else{
-                        buffer += c
+                        buffer+= c
                     }
                 }
             }

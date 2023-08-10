@@ -24,7 +24,7 @@ fun ControllerVisualisation(viewModel: ControllerViewModel) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ){
-        Config(viewModel)
+        //Config(viewModel)
         Box{
             Controller(modifier = Modifier.align(Alignment.Center), fingerCount, buttonPress)
             //SnapPoints(viewModel.motorConfig.stepsOnFingerCount[fingerCount])
