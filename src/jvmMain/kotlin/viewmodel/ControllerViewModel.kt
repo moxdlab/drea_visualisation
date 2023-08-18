@@ -30,7 +30,7 @@ class ControllerViewModel: ViewModel() {
         get() = _buttonPress
 
 
-    private val _serialPort: SerialPort = SerialPort("/dev/cu.usbserial-1440")
+    private val _serialPort: SerialPort = SerialPort("/dev/cu.usbserial-1460")
 
     init {
         // replace with your Arduino's serial port name
@@ -53,21 +53,21 @@ class ControllerViewModel: ViewModel() {
                                 if(fields[fields.size-1] == buffer.length){
                                     //Button
                                     val pressed = fields[0] != 0
-                                    //if(_buttonPress.value != pressed)
-                                    _buttonPress.value = pressed
+                                    if(_buttonPress.value != pressed)
+                                        _buttonPress.value = pressed
                                     //Pointer Angle
                                     val angle = fields[1].toFloat()/100
-                                    //if(_pointerAngle.value != angle)
+                                    if(_pointerAngle.value != angle)
                                         _pointerAngle.value = angle
                                     //Finger count
-                                    //if(_fingerCount.value != fields[2])
+                                    if(_fingerCount.value != fields[2])
                                         _fingerCount.value = fields[2]
                                     //Finger pos
                                     val positions = mutableListOf<Float>()
                                     for (i in 0 until fields[2]){
                                         positions.add(fields[3+i].toFloat()/100)
                                     }
-                                    //if(_fingerPos.value != positions)
+                                    if(_fingerPos.value != positions)
                                         _fingerPos.value = positions
                                 }else{
                                     println("Error: False package length")
@@ -92,7 +92,22 @@ class ControllerViewModel: ViewModel() {
         }
     }
 
-    fun changeStepsOnFingerCount(index:Int, steps:Int){
+
+    fun sendData(){
+
+        var output = ""
+        output+= motorConfig.snapStrength.value.toString() + ";"
+        output+= motorConfig.maximalTouches.value.toString() + ";"
+
+        for (touchSnapPoints in motorConfig.touchSnapPoints.value){
+            output+= "$touchSnapPoints;"
+        }
+
+        _serialPort.writeBytes(output.toByteArray())
+    }
+
+
+    /*fun changeStepsOnFingerCount(index:Int, steps:Int){
         if(steps >= 0) {
             motorConfig.stepsOnFingerCount[index] = steps
             writeToSerial("$index$steps;")
@@ -103,6 +118,6 @@ class ControllerViewModel: ViewModel() {
 
     fun writeToSerial(input: String){
         _serialPort.writeBytes(input.toByteArray())
-    }
+    }*/
 
 }

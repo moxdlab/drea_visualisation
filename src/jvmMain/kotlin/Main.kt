@@ -11,7 +11,7 @@ fun main() = application {
 
     val controllerViewModel = ControllerViewModel()
 
-    Window(onCloseRequest = ::exitApplication) {
+    Window(onCloseRequest = ::exitApplication, title = "MultiKnob Visualisation") {
         ControllerVisualisation(viewModel = controllerViewModel)
     }
 }
