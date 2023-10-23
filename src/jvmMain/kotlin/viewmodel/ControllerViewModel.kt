@@ -5,10 +5,11 @@ import dev.icerock.moko.mvvm.livedata.MutableLiveData
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import jssc.SerialPort
 import model.MotorConfig
+import java.io.File
 import java.time.Instant
 
 
-class ControllerViewModel: ViewModel() {
+class ControllerViewModel {
 
     val motorConfig = MotorConfig()
 
@@ -29,11 +30,15 @@ class ControllerViewModel: ViewModel() {
     val buttonPress: LiveData<Boolean>
         get() = _buttonPress
 
+    private val directory = File("/dev")
+    private val cuPorts = directory.listFiles { file ->
+        file.name.startsWith("cu.usbserial")
+    }
 
-    private val _serialPort: SerialPort = SerialPort("/dev/cu.usbserial-1460")
+    //private val _serialPort: SerialPort = SerialPort("/dev/cu.usbserial-1460")
+    private val _serialPort: SerialPort = SerialPort(cuPorts?.first()?.absolutePath)
 
     init {
-        // replace with your Arduino's serial port name
         _serialPort.openPort()
         _serialPort.setParams(115200, 8, 1, 0)
 
@@ -92,9 +97,7 @@ class ControllerViewModel: ViewModel() {
         }
     }
 
-
     fun sendData(){
-
         var output = ""
         output+= motorConfig.snapStrength.value.toString() + ";"
         output+= motorConfig.maximalTouches.value.toString() + ";"
@@ -105,19 +108,5 @@ class ControllerViewModel: ViewModel() {
 
         _serialPort.writeBytes(output.toByteArray())
     }
-
-
-    /*fun changeStepsOnFingerCount(index:Int, steps:Int){
-        if(steps >= 0) {
-            motorConfig.stepsOnFingerCount[index] = steps
-            writeToSerial("$index$steps;")
-            println("$index$steps")
-        }
-
-    }
-
-    fun writeToSerial(input: String){
-        _serialPort.writeBytes(input.toByteArray())
-    }*/
 
 }

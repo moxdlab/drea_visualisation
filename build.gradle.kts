@@ -35,7 +35,7 @@ kotlin {
     sourceSets {
         val jvmMain by getting {
             dependencies {
-                implementation(compose.desktop.currentOs)
+                implementation(compose.desktop.macos_arm64)
             }
         }
         val jvmTest by getting

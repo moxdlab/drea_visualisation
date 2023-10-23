@@ -1,6 +1,5 @@
 package model
 
-import dev.icerock.moko.mvvm.livedata.LiveData
 import dev.icerock.moko.mvvm.livedata.MutableLiveData
 
 class MotorConfig {
