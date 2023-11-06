@@ -50,9 +50,8 @@ fun SnapPoints(motorConfig: MotorConfig, touchCountLiveData: LiveData<Int>, cont
 
     if(touchSnapPoints.value[touchCount.value] != 0){
         val steps = 360 / touchSnapPoints.value[touchCount.value].toFloat()
-        val angle = controllerViewModel.pointerAngle.value
         for (i in 0..touchSnapPoints.value[touchCount.value]) {
-            SnapPointsSurface(modifier = Modifier.fillMaxSize().rotate( angle+ steps * i))
+            SnapPointsSurface(modifier = Modifier.fillMaxSize().rotate( 180 + steps * i))
         }
     }
 }

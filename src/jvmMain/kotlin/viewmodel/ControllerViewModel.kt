@@ -98,14 +98,15 @@ class ControllerViewModel {
     }
 
     fun sendData(){
-        var output = ""
+        var output = "#"
         output+= motorConfig.snapStrength.value.toString() + ";"
-        output+= motorConfig.maximalTouches.value.toString() + ";"
 
         for (touchSnapPoints in motorConfig.touchSnapPoints.value){
             output+= "$touchSnapPoints;"
         }
 
+        output += "$"
+        println(output)
         _serialPort.writeBytes(output.toByteArray())
     }
 
