@@ -1,15 +1,17 @@
 package ui.compose
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Slider
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.icerock.moko.mvvm.livedata.LiveData
 import dev.icerock.moko.mvvm.livedata.MutableLiveData
 import dev.icerock.moko.mvvm.livedata.compose.observeAsState
 import model.MotorConfig
@@ -51,6 +53,8 @@ fun Config(
             Text("Upload")
         }
         */
+        //Dummy Data
+        SerialSelection(openPorts = LiveData(listOf("Port1", "Port2", "Port3")), selectPort =  {})
     }
 }
 
@@ -92,7 +96,7 @@ fun TouchSnapPoint(touchValue: List<Int>, changeTouchSnapPointsValue: (Int, Int)
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        Text("Snap Strength: ", modifier = Modifier.padding(horizontal = 8.dp))
+        Text("Snap Points: ", modifier = Modifier.padding(horizontal = 8.dp))
         Text(text = "${touchValue.last()}", modifier = Modifier.padding(horizontal = 8.dp))
         Slider(
             value = touchValue.last().toFloat(),
@@ -144,4 +148,71 @@ fun Config(motorConfig: MotorConfig, sendData:()->Unit){
         motorConfig::changeTouchSnapPointsValue,
         sendData
     )
+}
+
+@Composable
+fun SerialSelection(
+    modifier: Modifier = Modifier,
+    openPorts: LiveData<List<String>>,
+    selectPort: (String) -> Unit
+){
+    Row(
+        modifier = Modifier.padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+
+        Button(onClick = {}) {
+            Text("Refresh")
+        }
+        Spacer(modifier = Modifier.padding(10.dp))
+        SerialDropdown(openPorts = openPorts, selectPort = selectPort)
+        Spacer(modifier = Modifier.padding(10.dp))
+        Button(onClick = {}) {
+            Text("Reload")
+        }
+    }
+}
+
+@Composable
+fun SerialDropdown(
+    modifier: Modifier = Modifier,
+    openPorts: LiveData<List<String>>,
+    selectPort: (String) -> Unit
+) {
+    val ports by openPorts.observeAsState()
+
+    if (ports.isNotEmpty()) {
+        var expanded by remember { mutableStateOf(false) }
+        var selectedPort by remember { mutableStateOf(ports[0]) }
+
+        Box(modifier = modifier) {
+            Text(
+                text = selectedPort,
+                modifier = Modifier
+                    .clickable { expanded = true }
+                    .background(Color.LightGray)
+                    .padding(8.dp)
+            )
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                ports.forEach { port ->
+                    DropdownMenuItem(
+                        onClick = {
+                            selectedPort = port
+                            selectPort(port)
+                            expanded = false
+                        }
+                    ) {
+                        Text(text = port)
+                    }
+                }
+            }
+        }
+    } else {
+        Text(text = "No ports available")
+    }
 }
