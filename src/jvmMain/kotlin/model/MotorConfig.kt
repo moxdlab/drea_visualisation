@@ -1,21 +1,22 @@
 package model
 
-import dev.icerock.moko.mvvm.livedata.MutableLiveData
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
 
 class MotorConfig {
 
-    var maximalTouches = 5
+    private val snapStrength: MutableStateFlow<Float> = MutableStateFlow(1f)
+    fun getSnapStrength() = snapStrength.asStateFlow()
 
-    var snapStrength: MutableLiveData<Float> = MutableLiveData(0f)
-
-    var touchSnapPoints: MutableLiveData<List<Int>> = MutableLiveData(listOf())
-
-
-    init {
-        maximalTouches = 5
-        snapStrength.value = 1f
-        touchSnapPoints.value = listOf(0,12,12,12,12,12)
+    fun changeSnapStrength(value: Float){
+        snapStrength.value = value
     }
+
+
+    private val touchSnapPoints: MutableStateFlow<List<Int>> = MutableStateFlow(listOf(0,12,12,12,12,12))
+    fun getTouchSnapPoints() = touchSnapPoints.asStateFlow()
+
 
     fun changeTouchSnapPointsValue(value: Int, index: Int){
         val list = touchSnapPoints.value.toMutableList()

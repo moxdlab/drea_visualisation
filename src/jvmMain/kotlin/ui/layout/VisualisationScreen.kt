@@ -3,6 +3,7 @@ package ui.layout
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import ui.compose.*
@@ -13,17 +14,29 @@ import viewmodel.ControllerViewModel
 fun ControllerVisualisation(viewModel: ControllerViewModel) {
 
     Box {
-        Row (
+        Row(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
-        ){
-            Config(viewModel.motorConfig, viewModel::sendData)
-            Box{
-                Controller(modifier = Modifier.align(Alignment.Center), viewModel.fingerCount, viewModel.buttonPress)
-                SnapPoints(viewModel.motorConfig, viewModel.fingerCount, viewModel)
-                Pointer(currentAngleLiveData = viewModel.pointerAngle)
-                Touches(viewModel.fingerPos)
+        ) {
+            Config(
+                viewModel.motorConfig,
+                viewModel::sendData,
+                viewModel.serialConnection::refreshPorts,
+                viewModel.serialConnection.getPortList(),
+                viewModel.serialConnection::selectPort,
+                viewModel.serialConnection::connectToPort
+            )
+            Box {
+                val multiKnob = viewModel.multiKnob.collectAsState()
+                Controller(
+                    modifier = Modifier.align(Alignment.Center),
+                    multiKnob.value.fingerCount,
+                    multiKnob.value.isButtonPressed
+                )
+                SnapPoints(viewModel.motorConfig.getTouchSnapPoints(), multiKnob.value.fingerCount)
+                Pointer(currentAngle = multiKnob.value.pointerAngle)
+                Touches(multiKnob.value.fingerPosition)
             }
         }
     }

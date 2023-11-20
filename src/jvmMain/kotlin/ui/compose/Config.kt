@@ -11,30 +11,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.icerock.moko.mvvm.livedata.LiveData
-import dev.icerock.moko.mvvm.livedata.MutableLiveData
-import dev.icerock.moko.mvvm.livedata.compose.observeAsState
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import model.MotorConfig
 
 @Preview
 @Composable
 fun Config(
-    snapStrength: MutableLiveData<Float>,
-    touchSnapPoints: MutableLiveData<List<Int>>,
-    changeTouchSnapPointsValue: (Int,Int)->Unit,
-    sendData:()->Unit
+    snapStrength: Flow<Float>,
+    touchSnapPoints: Flow<List<Int>>,
+    changeSnapStrength: (Float) -> Unit,
+    changeTouchSnapPointsValue: (Int, Int) -> Unit,
+    sendData: () -> Unit,
+    refreshPorts: () -> Unit,
+    portList: Flow<List<String>>,
+    selectPort: (String) -> Unit,
+    connectToPort: () -> Unit
 ) {
 
 
-    Column (
+    Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly
-    ){
+    ) {
         Text("Configuration", fontSize = 30.sp)
 
-        SnapStrength(snapStrength, sendData)
+        SnapStrength(snapStrength, changeSnapStrength, sendData)
 
-        val touchSnapPointList by touchSnapPoints.observeAsState()
+        val touchSnapPointList by touchSnapPoints.collectAsState(listOf(0))
         //Same Snaps on different Touches
         TouchSnapPoint(touchSnapPointList, changeTouchSnapPointsValue, sendData)
 
@@ -54,7 +58,7 @@ fun Config(
         }
         */
         //Dummy Data
-        SerialSelection(openPorts = LiveData(listOf("Port1", "Port2", "Port3")), selectPort =  {})
+        SerialSelection(refreshPorts, portList, selectPort, connectToPort)
     }
 }
 
@@ -71,13 +75,13 @@ fun TouchSnapPoints(touchValue: Int, i: Int, changeTouchSnapPointsValue: (Int, I
         Text(text = "$touchValue", modifier = Modifier.padding(horizontal = 8.dp))
         TextField(
             onValueChange = {
-                val value = if(it == ""){
+                val value = if (it == "") {
                     0
-                }else if(!it.matches(pattern)){
+                } else if (!it.matches(pattern)) {
                     touchValue
-                }else if(it.toInt() >= 1000){
+                } else if (it.toInt() >= 1000) {
                     999
-                }else{
+                } else {
                     it.toInt()
                 }
                 changeTouchSnapPointsValue(value, i)
@@ -87,6 +91,7 @@ fun TouchSnapPoints(touchValue: Int, i: Int, changeTouchSnapPointsValue: (Int, I
     }
 }
 
+//TODO Slider composable
 @Preview
 @Composable
 fun TouchSnapPoint(touchValue: List<Int>, changeTouchSnapPointsValue: (Int, Int) -> Unit, sendData: () -> Unit) {
@@ -101,7 +106,7 @@ fun TouchSnapPoint(touchValue: List<Int>, changeTouchSnapPointsValue: (Int, Int)
         Slider(
             value = touchValue.last().toFloat(),
             onValueChange = { newValue ->
-                for (i in 1 until touchValue.size){
+                for (i in 1 until touchValue.size) {
                     changeTouchSnapPointsValue(newValue.toInt(), i)
                 }
                 sendData()
@@ -114,11 +119,10 @@ fun TouchSnapPoint(touchValue: List<Int>, changeTouchSnapPointsValue: (Int, Int)
 }
 
 
-
 @Preview
 @Composable
-fun SnapStrength(snapStrength: MutableLiveData<Float>, sendData: () -> Unit) {
-    val snapStrengthValue by snapStrength.observeAsState()
+fun SnapStrength(snapStrength: Flow<Float>, changeTouchSnapPointsValue: (Float) -> Unit, sendData: () -> Unit) {
+    val snapStrengthValue by snapStrength.collectAsState(1f)
 
     Row(
         modifier = Modifier.padding(16.dp),
@@ -130,7 +134,7 @@ fun SnapStrength(snapStrength: MutableLiveData<Float>, sendData: () -> Unit) {
         Slider(
             value = snapStrengthValue,
             onValueChange = { newValue ->
-                snapStrength.value = newValue
+                changeTouchSnapPointsValue(newValue)
                 sendData()
             },
             valueRange = 0f..10f,
@@ -141,35 +145,48 @@ fun SnapStrength(snapStrength: MutableLiveData<Float>, sendData: () -> Unit) {
 }
 
 @Composable
-fun Config(motorConfig: MotorConfig, sendData:()->Unit){
+fun Config(
+    motorConfig: MotorConfig,
+    sendData: () -> Unit,
+    refreshPorts: () -> Unit,
+    portList: Flow<List<String>>,
+    selectPort: (String) -> Unit,
+    connectToPort: () -> Unit
+) {
     Config(
-        motorConfig.snapStrength,
-        motorConfig.touchSnapPoints,
+        motorConfig.getSnapStrength(),
+        motorConfig.getTouchSnapPoints(),
+        motorConfig::changeSnapStrength,
         motorConfig::changeTouchSnapPointsValue,
-        sendData
+        sendData,
+        refreshPorts,
+        portList,
+        selectPort,
+        connectToPort
     )
 }
 
 @Composable
 fun SerialSelection(
-    modifier: Modifier = Modifier,
-    openPorts: LiveData<List<String>>,
-    selectPort: (String) -> Unit
-){
+    refreshPorts: () -> Unit,
+    portList: Flow<List<String>>,
+    selectPort: (String) -> Unit,
+    connectToPort: () -> Unit
+) {
     Row(
         modifier = Modifier.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
 
-        Button(onClick = {}) {
+        Button(onClick = {refreshPorts()}) {
             Text("Refresh")
         }
         Spacer(modifier = Modifier.padding(10.dp))
-        SerialDropdown(openPorts = openPorts, selectPort = selectPort)
+        SerialDropdown(portList = portList, selectPort = selectPort)
         Spacer(modifier = Modifier.padding(10.dp))
-        Button(onClick = {}) {
-            Text("Reload")
+        Button(onClick = { connectToPort() }) {
+            Text("Connect")
         }
     }
 }
@@ -177,10 +194,10 @@ fun SerialSelection(
 @Composable
 fun SerialDropdown(
     modifier: Modifier = Modifier,
-    openPorts: LiveData<List<String>>,
+    portList: Flow<List<String>>,
     selectPort: (String) -> Unit
 ) {
-    val ports by openPorts.observeAsState()
+    val ports by portList.collectAsState(listOf())
 
     if (ports.isNotEmpty()) {
         var expanded by remember { mutableStateOf(false) }

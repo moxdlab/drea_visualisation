@@ -18,11 +18,6 @@ repositories {
 
 dependencies {
     commonMainImplementation("io.github.java-native:jssc:2.9.4")
-
-    // compose multiplatform
-    commonMainApi("dev.icerock.moko:mvvm-compose:0.16.1") // api mvvm-core, getViewModel for Compose Multiplatfrom
-    commonMainApi("dev.icerock.moko:mvvm-flow-compose:0.16.1") // api mvvm-flow, binding extensions for Compose Multiplatfrom
-    commonMainApi("dev.icerock.moko:mvvm-livedata-compose:0.16.1") // api mvvm-livedata, binding extensions for Compose Multiplatfrom
 }
 
 kotlin {
