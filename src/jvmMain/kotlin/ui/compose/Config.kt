@@ -16,7 +16,34 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.Flow
 import model.MotorConfig
 
-@Preview
+
+@Composable
+fun Config(
+    motorConfig: MotorConfig,
+    sendData: () -> Unit,
+    refreshPorts: () -> Unit,
+    portList: Flow<List<String>>,
+    selectedPortFlow: Flow<String?>,
+    selectPort: (String) -> Unit,
+    connectToPort: () -> Unit,
+    connectedPortNameFlow: Flow<String?>
+) {
+    Config(
+        motorConfig.getSnapStrength(),
+        motorConfig.getTouchSnapPoints(),
+        motorConfig::changeSnapStrength,
+        motorConfig::changeTouchSnapPointsValue,
+        sendData,
+        refreshPorts,
+        portList,
+        selectedPortFlow,
+        selectPort,
+        connectToPort,
+        connectedPortNameFlow
+    )
+}
+
+
 @Composable
 fun Config(
     snapStrength: Flow<Float>,
@@ -26,9 +53,9 @@ fun Config(
     sendData: () -> Unit,
     refreshPorts: () -> Unit,
     portList: Flow<List<String>>,
+    selectedPortFlow: Flow<String?>,
     selectPort: (String) -> Unit,
     connectToPort: () -> Unit,
-    isConnectedFlow: Flow<Boolean>,
     connectedPortNameFlow: Flow<String?>
 ) {
 
@@ -61,12 +88,11 @@ fun Config(
         }
         */
         //Dummy Data
-        SerialConnectionStatus(isConnectedFlow, connectedPortNameFlow)
-        SerialSelection(refreshPorts, portList, selectPort, connectToPort)
+        SerialConnectionStatus(connectedPortNameFlow)
+        SerialSelection(refreshPorts, portList, selectedPortFlow, selectPort, connectToPort)
     }
 }
 
-@Preview
 @Composable
 fun TouchSnapPoints(touchValue: Int, i: Int, changeTouchSnapPointsValue: (Int, Int) -> Unit) {
     val pattern = remember { Regex("^\\d*\$") }
@@ -96,7 +122,6 @@ fun TouchSnapPoints(touchValue: Int, i: Int, changeTouchSnapPointsValue: (Int, I
 }
 
 //TODO Slider composable
-@Preview
 @Composable
 fun TouchSnapPoint(touchValue: List<Int>, changeTouchSnapPointsValue: (Int, Int) -> Unit, sendData: () -> Unit) {
 
@@ -123,7 +148,6 @@ fun TouchSnapPoint(touchValue: List<Int>, changeTouchSnapPointsValue: (Int, Int)
 }
 
 
-@Preview
 @Composable
 fun SnapStrength(snapStrength: Flow<Float>, changeTouchSnapPointsValue: (Float) -> Unit, sendData: () -> Unit) {
     val snapStrengthValue by snapStrength.collectAsState(1f)
@@ -149,35 +173,10 @@ fun SnapStrength(snapStrength: Flow<Float>, changeTouchSnapPointsValue: (Float) 
 }
 
 @Composable
-fun Config(
-    motorConfig: MotorConfig,
-    sendData: () -> Unit,
-    refreshPorts: () -> Unit,
-    portList: Flow<List<String>>,
-    selectPort: (String) -> Unit,
-    connectToPort: () -> Unit,
-    isConnectedFlow: Flow<Boolean>,
-    connectedPortNameFlow: Flow<String?>
-) {
-    Config(
-        motorConfig.getSnapStrength(),
-        motorConfig.getTouchSnapPoints(),
-        motorConfig::changeSnapStrength,
-        motorConfig::changeTouchSnapPointsValue,
-        sendData,
-        refreshPorts,
-        portList,
-        selectPort,
-        connectToPort,
-        isConnectedFlow,
-        connectedPortNameFlow
-    )
-}
-
-@Composable
 fun SerialSelection(
     refreshPorts: () -> Unit,
     portList: Flow<List<String>>,
+    selectedPortFlow: Flow<String?>,
     selectPort: (String) -> Unit,
     connectToPort: () -> Unit
 ) {
@@ -191,7 +190,7 @@ fun SerialSelection(
             Text("Refresh")
         }
         Spacer(modifier = Modifier.padding(10.dp))
-        SerialDropdown(portList = portList, selectPort = selectPort)
+        SerialDropdown(portListFlow = portList, selectedPortFlow = selectedPortFlow, selectPort = selectPort)
         Spacer(modifier = Modifier.padding(10.dp))
         Button(onClick = { connectToPort() }) {
             Text("Connect")
@@ -202,18 +201,19 @@ fun SerialSelection(
 @Composable
 fun SerialDropdown(
     modifier: Modifier = Modifier,
-    portList: Flow<List<String>>,
+    portListFlow: Flow<List<String>>,
+    selectedPortFlow: Flow<String?>,
     selectPort: (String) -> Unit
 ) {
-    val ports by portList.collectAsState(listOf())
+    val ports by portListFlow.collectAsState(listOf())
+    val selectedPort by selectedPortFlow.collectAsState(if(ports.isNotEmpty()) ports.first() else null)
 
-    if (ports.isNotEmpty()) {
+    if (ports.isNotEmpty() && selectedPort != null) {
         var expanded by remember { mutableStateOf(false) }
-        var selectedPort by remember { mutableStateOf(ports[0]) }
 
         Box(modifier = modifier) {
             Text(
-                text = selectedPort,
+                text = selectedPort!!,
                 modifier = Modifier
                     .clickable { expanded = true }
                     .background(Color.LightGray)
@@ -227,7 +227,6 @@ fun SerialDropdown(
                 ports.forEach { port ->
                     DropdownMenuItem(
                         onClick = {
-                            selectedPort = port
                             selectPort(port)
                             expanded = false
                         }
@@ -243,15 +242,14 @@ fun SerialDropdown(
 }
 
 @Composable
-fun SerialConnectionStatus(isConnectedFlow: Flow<Boolean>, connectedPortNameFlow: Flow<String?>){
-    val isConnected = isConnectedFlow.collectAsState(false)
-    val connectedPortName = connectedPortNameFlow.collectAsState(null)
+fun SerialConnectionStatus(connectedPortNameFlow: Flow<String?>){
+    val connectedPortName by connectedPortNameFlow.collectAsState(null)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        Box(modifier = Modifier.size(20.dp).clip(CircleShape).background(if (isConnected.value)Color.Green else Color.Red))
+        Box(modifier = Modifier.size(20.dp).clip(CircleShape).background(if (connectedPortName != null)Color.Green else Color.Red))
         Spacer(Modifier.padding(5.dp))
-        Text(if (connectedPortName.value != null)"Connected: ${connectedPortName.value}" else "Not connected")
+        Text(if (connectedPortName != null)"Connected: $connectedPortName" else "Not connected")
     }
 }

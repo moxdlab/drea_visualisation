@@ -27,9 +27,9 @@ fun ControllerVisualisation(viewModel: ControllerViewModel) {
                 viewModel::sendData,
                 viewModel.serialConnection::refreshPorts,
                 viewModel.serialConnection.getPortList(),
+                viewModel.serialConnection.getSelectedPort(),
                 viewModel.serialConnection::selectPort,
                 viewModel::connectToPort,
-                viewModel.serialConnection.getIsConnected(),
                 viewModel.serialConnection.connectedPortName
             )
             Box {

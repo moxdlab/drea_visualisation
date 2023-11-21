@@ -37,6 +37,7 @@ class SerialConnection {
 
     private val selectedPort: MutableStateFlow<String?> =
         MutableStateFlow(if (portList.value.isNotEmpty()) portList.value.first() else null)
+    fun getSelectedPort() = selectedPort.asStateFlow()
 
     //"/dev/cu.usbserial-1460"
     fun selectPort(port: String) {
@@ -46,12 +47,13 @@ class SerialConnection {
     private var serialPort: SerialPort? = null
         set(value) {
             field = value
-            connectedPortName.value = value?.portName
+            if(value == null){
+                connectedPortName.value = null
+            }else{
+                connectedPortName.value = value.portName
+            }
         }
     val connectedPortName: MutableStateFlow<String?> = MutableStateFlow(null)
-
-    private val isConnected = MutableStateFlow(false)
-    fun getIsConnected() = isConnected.asStateFlow()
 
 
     fun connectToPort() {
@@ -59,7 +61,6 @@ class SerialConnection {
             if (serialPort != null && serialPort!!.isOpened) {
                 serialPort?.removeEventListener()
                 serialPort?.closePort()
-                isConnected.value = false
                 serialPort = null
             }
 
@@ -67,8 +68,8 @@ class SerialConnection {
             serialPort = SerialPort(selectedPort.value ?: return)
             serialPort!!.openPort()
             serialPort!!.setParams(115200, 8, 1, 0)
-            isConnected.value = true
         } catch (ex: SerialPortException) {
+            serialPort = null
             println(ex.message)
             return
         }
@@ -84,7 +85,6 @@ class SerialConnection {
                     serialPort?.removeEventListener()
                     serialPort?.closePort()
                     serialPort = null
-                    isConnected.emit(false)
                     cancel()
                 }
                 timeOut--
@@ -142,6 +142,7 @@ class SerialConnection {
 
 
     fun sendData(snapStrength: Float, touchSnapPoint: List<Int>) {
+        if(serialPort == null || !(serialPort?.isOpened ?: return)) return
         var output = "#"
         output += "$snapStrength;"
 
