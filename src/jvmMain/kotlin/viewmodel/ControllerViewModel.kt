@@ -12,6 +12,11 @@ class ControllerViewModel {
 
     val multiKnob = serialConnection.getMultiKnob()
 
+    fun connectToPort(){
+        serialConnection.connectToPort()
+        sendData()
+    }
+
     fun sendData() {
         serialConnection.sendData(motorConfig.getSnapStrength().value, motorConfig.getTouchSnapPoints().value)
     }

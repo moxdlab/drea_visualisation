@@ -28,7 +28,8 @@ class SerialConnection {
         }?.let { it.map { file -> file.absolutePath } } ?: listOf()
     }
 
-    private val selectedPort: MutableStateFlow<String?> = MutableStateFlow(portList.value.first())
+    private val selectedPort: MutableStateFlow<String?> =
+        MutableStateFlow(if (portList.value.isNotEmpty()) portList.value.first() else null)
 
     //"/dev/cu.usbserial-1460"
     fun selectPort(port: String) {
@@ -40,7 +41,7 @@ class SerialConnection {
 
     fun connectToPort() {
         try {
-            if(serialPort != null && serialPort!!.isOpened){
+            if (serialPort != null && serialPort!!.isOpened) {
                 serialPort?.removeEventListener()
                 serialPort?.closePort()
             }
@@ -49,7 +50,7 @@ class SerialConnection {
             serialPort = SerialPort(selectedPort.value ?: return)
             serialPort!!.openPort()
             serialPort!!.setParams(115200, 8, 1, 0)
-        }catch (ex: SerialPortException){
+        } catch (ex: SerialPortException) {
             println(ex.message)
             return
         }

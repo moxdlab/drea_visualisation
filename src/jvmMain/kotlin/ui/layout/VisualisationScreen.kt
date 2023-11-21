@@ -25,7 +25,7 @@ fun ControllerVisualisation(viewModel: ControllerViewModel) {
                 viewModel.serialConnection::refreshPorts,
                 viewModel.serialConnection.getPortList(),
                 viewModel.serialConnection::selectPort,
-                viewModel.serialConnection::connectToPort
+                viewModel::connectToPort
             )
             Box {
                 val multiKnob = viewModel.multiKnob.collectAsState()
