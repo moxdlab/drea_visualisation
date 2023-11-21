@@ -2,6 +2,7 @@ package model
 
 import jssc.SerialPort
 import jssc.SerialPortException
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,6 +11,11 @@ import java.time.Instant
 
 class SerialConnection {
 
+    companion object{
+        const val TIME_OUT_SECONDS = 3
+    }
+
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     private val multiKnob = MutableStateFlow(MultiKnob(0, 0f, listOf(), false))
     fun getMultiKnob(): StateFlow<MultiKnob> = multiKnob.asStateFlow()
@@ -26,6 +32,7 @@ class SerialConnection {
         portList.value = directory.listFiles { file ->
             file.name.startsWith("cu.usbserial")
         }?.let { it.map { file -> file.absolutePath } } ?: listOf()
+        selectedPort.value = if (portList.value.isNotEmpty()) portList.value.first() else null
     }
 
     private val selectedPort: MutableStateFlow<String?> =
@@ -36,30 +43,58 @@ class SerialConnection {
         selectedPort.value = port
     }
 
-
     private var serialPort: SerialPort? = null
+        set(value) {
+            field = value
+            connectedPortName.value = value?.portName
+        }
+    val connectedPortName: MutableStateFlow<String?> = MutableStateFlow(null)
+
+    private val isConnected = MutableStateFlow(false)
+    fun getIsConnected() = isConnected.asStateFlow()
+
 
     fun connectToPort() {
         try {
             if (serialPort != null && serialPort!!.isOpened) {
                 serialPort?.removeEventListener()
                 serialPort?.closePort()
+                isConnected.value = false
+                serialPort = null
             }
 
 
             serialPort = SerialPort(selectedPort.value ?: return)
             serialPort!!.openPort()
             serialPort!!.setParams(115200, 8, 1, 0)
+            isConnected.value = true
         } catch (ex: SerialPortException) {
             println(ex.message)
             return
         }
 
-        var time = Instant.now()
-        var counter = 0;
+        var timeCounter = Instant.now()
+        var counter = 0
+
+        var timeOut = TIME_OUT_SECONDS
+        coroutineScope.launch {
+            while (isActive){
+                if (timeOut==0){
+                    println("TimeOut")
+                    serialPort?.removeEventListener()
+                    serialPort?.closePort()
+                    serialPort = null
+                    isConnected.emit(false)
+                    cancel()
+                }
+                timeOut--
+                delay(1000)
+            }
+        }
 
         var buffer = ""
         serialPort!!.addEventListener { event ->
+            timeOut = TIME_OUT_SECONDS
             if (event.isRXCHAR) {
                 val data = serialPort!!.readBytes(event.eventValue)
                 for (c in String(data)) {
@@ -92,8 +127,8 @@ class SerialConnection {
                         buffer = "#"
 
                         counter++
-                        if (time.epochSecond + 1 < Instant.now().epochSecond) {
-                            time = Instant.now()
+                        if (timeCounter.epochSecond + 1 < Instant.now().epochSecond) {
+                            timeCounter = Instant.now()
                             println(counter)
                             counter = 0
                         }

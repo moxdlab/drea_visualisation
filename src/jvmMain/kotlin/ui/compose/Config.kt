@@ -4,15 +4,16 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import model.MotorConfig
 
 @Preview
@@ -26,7 +27,9 @@ fun Config(
     refreshPorts: () -> Unit,
     portList: Flow<List<String>>,
     selectPort: (String) -> Unit,
-    connectToPort: () -> Unit
+    connectToPort: () -> Unit,
+    isConnectedFlow: Flow<Boolean>,
+    connectedPortNameFlow: Flow<String?>
 ) {
 
 
@@ -58,6 +61,7 @@ fun Config(
         }
         */
         //Dummy Data
+        SerialConnectionStatus(isConnectedFlow, connectedPortNameFlow)
         SerialSelection(refreshPorts, portList, selectPort, connectToPort)
     }
 }
@@ -151,7 +155,9 @@ fun Config(
     refreshPorts: () -> Unit,
     portList: Flow<List<String>>,
     selectPort: (String) -> Unit,
-    connectToPort: () -> Unit
+    connectToPort: () -> Unit,
+    isConnectedFlow: Flow<Boolean>,
+    connectedPortNameFlow: Flow<String?>
 ) {
     Config(
         motorConfig.getSnapStrength(),
@@ -162,7 +168,9 @@ fun Config(
         refreshPorts,
         portList,
         selectPort,
-        connectToPort
+        connectToPort,
+        isConnectedFlow,
+        connectedPortNameFlow
     )
 }
 
@@ -231,5 +239,19 @@ fun SerialDropdown(
         }
     } else {
         Text(text = "No ports available")
+    }
+}
+
+@Composable
+fun SerialConnectionStatus(isConnectedFlow: Flow<Boolean>, connectedPortNameFlow: Flow<String?>){
+    val isConnected = isConnectedFlow.collectAsState(false)
+    val connectedPortName = connectedPortNameFlow.collectAsState(null)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Box(modifier = Modifier.size(20.dp).clip(CircleShape).background(if (isConnected.value)Color.Green else Color.Red))
+        Spacer(Modifier.padding(5.dp))
+        Text(if (connectedPortName.value != null)"Connected: ${connectedPortName.value}" else "Not connected")
     }
 }
