@@ -1,6 +1,4 @@
-import org.jetbrains.compose.compose
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("multiplatform")
@@ -17,20 +15,21 @@ repositories {
 }
 
 dependencies {
-    commonMainImplementation("io.github.java-native:jssc:2.9.4")
+    commonMainImplementation("io.github.java-native:jssc:2.9.5")
+    commonMainImplementation("org.slf4j:slf4j-simple:2.0.9")
 }
 
 kotlin {
     jvm {
         compilations.all {
-            kotlinOptions.jvmTarget = "11"
+            kotlinOptions.jvmTarget = "1.8"
         }
         withJava()
     }
     sourceSets {
         val jvmMain by getting {
             dependencies {
-                implementation(compose.desktop.macos_arm64)
+                implementation(compose.desktop.currentOs)
             }
         }
         val jvmTest by getting
@@ -42,7 +41,7 @@ compose.desktop {
         mainClass = "MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "ComposeVisualisationDREA"
+            packageName = "MultiKnob Visualisation"
             packageVersion = "1.0.0"
         }
     }
