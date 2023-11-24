@@ -14,7 +14,7 @@ class MotorConfig {
     }
 
 
-    private val touchSnapPoints: MutableStateFlow<List<Int>> = MutableStateFlow(listOf(0,12,12,12,12,12))
+    private val touchSnapPoints: MutableStateFlow<List<Int>> = MutableStateFlow(listOf(12,12,12,12,12,12))
     fun getTouchSnapPoints() = touchSnapPoints.asStateFlow()
 
 

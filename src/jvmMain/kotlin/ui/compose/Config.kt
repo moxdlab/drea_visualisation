@@ -135,7 +135,7 @@ fun TouchSnapPoint(touchValue: List<Int>, changeTouchSnapPointsValue: (Int, Int)
         Slider(
             value = touchValue.last().toFloat(),
             onValueChange = { newValue ->
-                for (i in 1 until touchValue.size) {
+                for (i in touchValue.indices) {
                     changeTouchSnapPointsValue(newValue.toInt(), i)
                 }
                 sendData()
