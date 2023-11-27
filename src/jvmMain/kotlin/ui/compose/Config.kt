@@ -26,6 +26,7 @@ fun Config(
     selectedPortFlow: Flow<String?>,
     selectPort: (String) -> Unit,
     connectToPort: () -> Unit,
+    disconnectFromPort: () -> Unit,
     connectedPortNameFlow: Flow<String?>
 ) {
     Config(
@@ -39,6 +40,7 @@ fun Config(
         selectedPortFlow,
         selectPort,
         connectToPort,
+        disconnectFromPort,
         connectedPortNameFlow
     )
 }
@@ -56,6 +58,7 @@ fun Config(
     selectedPortFlow: Flow<String?>,
     selectPort: (String) -> Unit,
     connectToPort: () -> Unit,
+    disconnectFromPort: () -> Unit,
     connectedPortNameFlow: Flow<String?>
 ) {
 
@@ -89,7 +92,7 @@ fun Config(
         */
         //Dummy Data
         SerialConnectionStatus(connectedPortNameFlow)
-        SerialSelection(refreshPorts, portList, selectedPortFlow, selectPort, connectToPort)
+        SerialSelection(refreshPorts, portList, selectedPortFlow, selectPort, connectToPort, disconnectFromPort)
     }
 }
 
@@ -178,7 +181,8 @@ fun SerialSelection(
     portList: Flow<List<String>>,
     selectedPortFlow: Flow<String?>,
     selectPort: (String) -> Unit,
-    connectToPort: () -> Unit
+    connectToPort: () -> Unit,
+    disconnectFromPort: () -> Unit
 ) {
     Row(
         modifier = Modifier.padding(16.dp),
@@ -194,6 +198,10 @@ fun SerialSelection(
         Spacer(modifier = Modifier.padding(10.dp))
         Button(onClick = { connectToPort() }) {
             Text("Connect")
+        }
+        Spacer(modifier = Modifier.padding(10.dp))
+        Button(onClick = { disconnectFromPort() }) {
+            Text("Disconnect")
         }
     }
 }

@@ -30,6 +30,7 @@ fun ControllerVisualisation(viewModel: ControllerViewModel) {
                 viewModel.serialConnection.getSelectedPort(),
                 viewModel.serialConnection::selectPort,
                 viewModel::connectToPort,
+                viewModel.serialConnection::disconnectFromPort,
                 viewModel.serialConnection.connectedPortName
             )
             Box {
