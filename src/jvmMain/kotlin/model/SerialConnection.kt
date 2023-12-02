@@ -60,17 +60,13 @@ class SerialConnection {
             serialPort?.removeEventListener()
             serialPort?.closePort()
             serialPort = null
+            multiKnob.value = MultiKnob(0, 0f, listOf(), false)
         }
     }
 
     fun connectToPort() {
         try {
-            if (serialPort != null && serialPort!!.isOpened) {
-                serialPort?.removeEventListener()
-                serialPort?.closePort()
-                serialPort = null
-            }
-
+            disconnectFromPort()
 
             serialPort = SerialPort(selectedPort.value ?: return)
             serialPort!!.openPort()
@@ -89,9 +85,7 @@ class SerialConnection {
             while (isActive){
                 if (timeOut==0){
                     println("TimeOut")
-                    serialPort?.removeEventListener()
-                    serialPort?.closePort()
-                    serialPort = null
+                    disconnectFromPort()
                     cancel()
                 }
                 timeOut--

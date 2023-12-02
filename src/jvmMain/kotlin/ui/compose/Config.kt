@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import model.MotorConfig
 
 
@@ -69,11 +70,15 @@ fun Config(
     ) {
         Text("Configuration", fontSize = 30.sp)
 
-        SnapStrength(snapStrength, changeSnapStrength, sendData)
+        val isConnected by connectedPortNameFlow.map { connectedPortName ->
+            connectedPortName != null
+        }.collectAsState(initial = false)
+
+        SnapStrength(snapStrength, changeSnapStrength, sendData, isConnected)
 
         val touchSnapPointList by touchSnapPoints.collectAsState(listOf(0))
         //Same Snaps on different Touches
-        TouchSnapPoint(touchSnapPointList, changeTouchSnapPointsValue, sendData)
+        TouchSnapPoint(touchSnapPointList, changeTouchSnapPointsValue, sendData, isConnected)
 
         //Different Snaps on different Touches
         /*
@@ -92,7 +97,7 @@ fun Config(
         */
         //Dummy Data
         SerialConnectionStatus(connectedPortNameFlow)
-        SerialSelection(refreshPorts, portList, selectedPortFlow, selectPort, connectToPort, disconnectFromPort)
+        SerialSelection(refreshPorts, portList, selectedPortFlow, selectPort, connectToPort, disconnectFromPort, isConnected)
     }
 }
 
@@ -126,7 +131,7 @@ fun TouchSnapPoints(touchValue: Int, i: Int, changeTouchSnapPointsValue: (Int, I
 
 //TODO Slider composable
 @Composable
-fun TouchSnapPoint(touchValue: List<Int>, changeTouchSnapPointsValue: (Int, Int) -> Unit, sendData: () -> Unit) {
+fun TouchSnapPoint(touchValue: List<Int>, changeTouchSnapPointsValue: (Int, Int) -> Unit, sendData: () -> Unit, isConnected: Boolean) {
 
     Row(
         modifier = Modifier.padding(16.dp),
@@ -136,6 +141,7 @@ fun TouchSnapPoint(touchValue: List<Int>, changeTouchSnapPointsValue: (Int, Int)
         Text("Snap Points: ", modifier = Modifier.padding(horizontal = 8.dp))
         Text(text = "${touchValue.last()}", modifier = Modifier.padding(horizontal = 8.dp))
         Slider(
+            enabled = isConnected,
             value = touchValue.last().toFloat(),
             onValueChange = { newValue ->
                 for (i in touchValue.indices) {
@@ -152,7 +158,7 @@ fun TouchSnapPoint(touchValue: List<Int>, changeTouchSnapPointsValue: (Int, Int)
 
 
 @Composable
-fun SnapStrength(snapStrength: Flow<Float>, changeTouchSnapPointsValue: (Float) -> Unit, sendData: () -> Unit) {
+fun SnapStrength(snapStrength: Flow<Float>, changeTouchSnapPointsValue: (Float) -> Unit, sendData: () -> Unit, isConnected: Boolean) {
     val snapStrengthValue by snapStrength.collectAsState(1f)
 
     Row(
@@ -163,6 +169,7 @@ fun SnapStrength(snapStrength: Flow<Float>, changeTouchSnapPointsValue: (Float) 
         Text("Snap Strength: ", modifier = Modifier.padding(horizontal = 8.dp))
         Text(text = "${snapStrengthValue.toInt()}", modifier = Modifier.padding(horizontal = 8.dp))
         Slider(
+            enabled = isConnected,
             value = snapStrengthValue,
             onValueChange = { newValue ->
                 changeTouchSnapPointsValue(newValue)
@@ -172,92 +179,5 @@ fun SnapStrength(snapStrength: Flow<Float>, changeTouchSnapPointsValue: (Float) 
             steps = 9,
             modifier = Modifier.padding(horizontal = 8.dp).width(250.dp)
         )
-    }
-}
-
-@Composable
-fun SerialSelection(
-    refreshPorts: () -> Unit,
-    portList: Flow<List<String>>,
-    selectedPortFlow: Flow<String?>,
-    selectPort: (String) -> Unit,
-    connectToPort: () -> Unit,
-    disconnectFromPort: () -> Unit
-) {
-    Row(
-        modifier = Modifier.padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-
-        Button(onClick = {refreshPorts()}) {
-            Text("Refresh")
-        }
-        Spacer(modifier = Modifier.padding(10.dp))
-        SerialDropdown(portListFlow = portList, selectedPortFlow = selectedPortFlow, selectPort = selectPort)
-        Spacer(modifier = Modifier.padding(10.dp))
-        Button(onClick = { connectToPort() }) {
-            Text("Connect")
-        }
-        Spacer(modifier = Modifier.padding(10.dp))
-        Button(onClick = { disconnectFromPort() }) {
-            Text("Disconnect")
-        }
-    }
-}
-
-@Composable
-fun SerialDropdown(
-    modifier: Modifier = Modifier,
-    portListFlow: Flow<List<String>>,
-    selectedPortFlow: Flow<String?>,
-    selectPort: (String) -> Unit
-) {
-    val ports by portListFlow.collectAsState(listOf())
-    val selectedPort by selectedPortFlow.collectAsState(if(ports.isNotEmpty()) ports.first() else null)
-
-    if (ports.isNotEmpty() && selectedPort != null) {
-        var expanded by remember { mutableStateOf(false) }
-
-        Box(modifier = modifier) {
-            Text(
-                text = selectedPort!!,
-                modifier = Modifier
-                    .clickable { expanded = true }
-                    .background(Color.LightGray)
-                    .padding(8.dp)
-            )
-
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                ports.forEach { port ->
-                    DropdownMenuItem(
-                        onClick = {
-                            selectPort(port)
-                            expanded = false
-                        }
-                    ) {
-                        Text(text = port)
-                    }
-                }
-            }
-        }
-    } else {
-        Text(text = "No ports available")
-    }
-}
-
-@Composable
-fun SerialConnectionStatus(connectedPortNameFlow: Flow<String?>){
-    val connectedPortName by connectedPortNameFlow.collectAsState(null)
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Box(modifier = Modifier.size(20.dp).clip(CircleShape).background(if (connectedPortName != null)Color.Green else Color.Red))
-        Spacer(Modifier.padding(5.dp))
-        Text(if (connectedPortName != null)"Connected: $connectedPortName" else "Not connected")
     }
 }
