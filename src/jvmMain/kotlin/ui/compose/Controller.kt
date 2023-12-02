@@ -1,12 +1,10 @@
 package ui.compose
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -15,16 +13,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.flow.StateFlow
+import model.MultiKnob
 
-val SIZE = 2
+const val SIZE = 2
 
 @Composable
-@Preview
-fun Controller(modifier: Modifier = Modifier, touchCount: Int, buttonPress: Boolean) {
+fun Controller(multiKnob: MultiKnob, touchSnapPoints: List<Int>){
+    Box{
+        Center(
+            modifier = Modifier.align(Alignment.Center),
+            multiKnob.fingerCount,
+            multiKnob.isButtonPressed
+        )
+        SnapPoints(touchSnapPoints, multiKnob.fingerCount)
+        Pointer(currentAngle = multiKnob.pointerAngle)
+        Touches(multiKnob.fingerPosition)
+    }
+}
+
+@Composable
+private fun Center(modifier: Modifier = Modifier, touchCount: Int, buttonPress: Boolean) {
 
     val color = if (buttonPress) {
-        Color.Red
+        Color.Blue
     } else {
         Color.Gray
     }
@@ -39,21 +50,21 @@ fun Controller(modifier: Modifier = Modifier, touchCount: Int, buttonPress: Bool
     }
 }
 
-@Composable
-fun SnapPoints(touchSnapPointsFlow: StateFlow<List<Int>>, touchCount: Int) {
-    val touchSnapPoints = touchSnapPointsFlow.collectAsState()
 
-    if (touchSnapPoints.value[touchCount] != 0) {
-        val steps = 360 / touchSnapPoints.value[touchCount].toFloat()
-        for (i in 0..touchSnapPoints.value[touchCount]) {
+
+@Composable
+private fun SnapPoints(touchSnapPoints: List<Int>, touchCount: Int) {
+
+    if (touchSnapPoints[touchCount] != 0) {
+        val steps = 360 / touchSnapPoints[touchCount].toFloat()
+        for (i in 0..touchSnapPoints[touchCount]) {
             SnapPointsSurface(modifier = Modifier.fillMaxSize().rotate(180 + steps * i))
         }
     }
 }
 
-@Preview
 @Composable
-fun SnapPointsSurface(modifier: Modifier = Modifier) {
+private fun SnapPointsSurface(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.size((100 * SIZE).dp, (100 * SIZE).dp)
     ) {
@@ -69,7 +80,7 @@ fun SnapPointsSurface(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun Pointer(modifier: Modifier = Modifier.fillMaxSize(), currentAngle: Float) {
+private fun Pointer(modifier: Modifier = Modifier.fillMaxSize(), currentAngle: Float) {
     Box(
         modifier = modifier.size((100 * SIZE).dp, (100 * SIZE).dp).rotate(currentAngle)
     ) {
@@ -84,9 +95,8 @@ fun Pointer(modifier: Modifier = Modifier.fillMaxSize(), currentAngle: Float) {
     }
 }
 
-@Preview
 @Composable
-fun Tick(modifier: Modifier = Modifier, length: Int, width: Int, color: Color) {
+private fun Tick(modifier: Modifier = Modifier, length: Int, width: Int, color: Color) {
     Box(
         modifier = modifier
             .size(width.dp, length.dp)
@@ -96,14 +106,14 @@ fun Tick(modifier: Modifier = Modifier, length: Int, width: Int, color: Color) {
 
 
 @Composable
-fun Touches(fingerPos: List<Float>) {
+private fun Touches(fingerPos: List<Float>) {
     for (i in fingerPos.indices) {
         Touch(modifier = Modifier.fillMaxSize().rotate(fingerPos[i] / 2), fingerPos[i] / 2)
     }
 }
 
 @Composable
-fun Touch(modifier: Modifier = Modifier.fillMaxSize(), currentAngle: Float) {
+private fun Touch(modifier: Modifier = Modifier.fillMaxSize(), currentAngle: Float) {
     Box(
         modifier = modifier.size((100 * SIZE).dp, (100 * SIZE).dp).rotate(currentAngle)
     ) {

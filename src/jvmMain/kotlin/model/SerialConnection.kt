@@ -54,6 +54,7 @@ class SerialConnection {
             }
         }
     val connectedPortName: MutableStateFlow<String?> = MutableStateFlow(null)
+    fun getConnectedPortName() = connectedPortName.asStateFlow()
 
     fun disconnectFromPort(){
         if (serialPort != null && serialPort!!.isOpened) {

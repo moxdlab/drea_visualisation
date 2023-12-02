@@ -1,19 +1,19 @@
 package ui.layout
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import ui.compose.*
+import ui.compose.Configuration
+import ui.compose.Controller
 import viewmodel.ControllerViewModel
 
 @Composable
-@Preview
 fun ControllerVisualisation(viewModel: ControllerViewModel) {
 
     Box {
@@ -22,29 +22,31 @@ fun ControllerVisualisation(viewModel: ControllerViewModel) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Config(
-                viewModel.motorConfig,
+
+
+            val snapStrength by viewModel.motorConfig.getSnapStrength().collectAsState()
+            val touchSnapPoints by viewModel.motorConfig.getTouchSnapPoints().collectAsState()
+
+            val connectedPortName by viewModel.serialConnection.getConnectedPortName().collectAsState()
+            val ports by viewModel.serialConnection.getPortList().collectAsState()
+            val selectedPort by viewModel.serialConnection.getSelectedPort().collectAsState(ports.firstOrNull())
+            Configuration(
+                snapStrength,
+                touchSnapPoints,
+                viewModel.motorConfig::changeSnapStrength,
+                viewModel.motorConfig::changeTouchSnapPointsValue,
                 viewModel::sendData,
                 viewModel.serialConnection::refreshPorts,
-                viewModel.serialConnection.getPortList(),
-                viewModel.serialConnection.getSelectedPort(),
+                ports,
+                selectedPort,
                 viewModel.serialConnection::selectPort,
                 viewModel::connectToPort,
                 viewModel.serialConnection::disconnectFromPort,
-                viewModel.serialConnection.connectedPortName
+                connectedPortName
             )
-            Box {
-                val multiKnob = viewModel.multiKnob.collectAsState()
-                Controller(
-                    modifier = Modifier.align(Alignment.Center),
-                    multiKnob.value.fingerCount,
-                    multiKnob.value.isButtonPressed
-                )
-                SnapPoints(viewModel.motorConfig.getTouchSnapPoints(), multiKnob.value.fingerCount)
-                Pointer(currentAngle = multiKnob.value.pointerAngle)
-                Touches(multiKnob.value.fingerPosition)
-            }
+
+            val multiKnob by viewModel.multiKnob.collectAsState()
+            Controller(multiKnob, touchSnapPoints)
         }
     }
-
 }

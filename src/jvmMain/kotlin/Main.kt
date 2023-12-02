@@ -10,7 +10,6 @@ import viewmodel.ControllerViewModel
 
 fun main() = application {
 
-
     val controllerViewModel = ControllerViewModel()
 
     Window(onCloseRequest = ::exitApplication, title = "MultiKnob Visualisation", state = WindowState(WindowPlacement.Maximized)) {
