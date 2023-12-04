@@ -2,6 +2,7 @@ package model
 
 import jssc.SerialPort
 import jssc.SerialPortException
+import jssc.SerialPortList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +13,7 @@ import java.time.Instant
 class SerialConnection {
 
     companion object{
-        const val TIME_OUT_SECONDS = 3
+        const val TIME_OUT_SECONDS = 5
     }
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
@@ -21,19 +22,21 @@ class SerialConnection {
     fun getMultiKnob(): StateFlow<MultiKnob> = multiKnob.asStateFlow()
 
 
-    private val directory = File("/dev")
-    private val portList: MutableStateFlow<List<String>> = directory.listFiles { file ->
-        file.name.startsWith("cu.usbserial")
-    }?.let { MutableStateFlow(it.map { file -> file.absolutePath }) } ?: MutableStateFlow(listOf())
 
+    private val portList: MutableStateFlow<List<String>> = MutableStateFlow(loadPortList())
     fun getPortList() = portList.asStateFlow()
 
     fun refreshPorts() {
-        portList.value = directory.listFiles { file ->
-            file.name.startsWith("cu.usbserial")
-        }?.let { it.map { file -> file.absolutePath } } ?: listOf()
+        portList.value = loadPortList()
         selectedPort.value = if (portList.value.isNotEmpty()) portList.value.first() else null
     }
+
+    private fun loadPortList() = File("/dev").listFiles { file ->
+        println(file.name)
+        file.name.startsWith("cu.usbserial")
+    }?.let { it.map { file -> file.absolutePath } } ?: run {
+        SerialPortList.getPortNames().asList()
+    } ?: listOf()
 
     private val selectedPort: MutableStateFlow<String?> =
         MutableStateFlow(if (portList.value.isNotEmpty()) portList.value.first() else null)
