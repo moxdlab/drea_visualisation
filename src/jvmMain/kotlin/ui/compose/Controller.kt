@@ -1,10 +1,13 @@
 package ui.compose
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -14,6 +17,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import model.MultiKnob
+import model.Touch
 
 const val SIZE = 2
 
@@ -27,7 +31,7 @@ fun Controller(multiKnob: MultiKnob, touchSnapPoints: List<Int>){
         )
         SnapPoints(touchSnapPoints, multiKnob.fingerCount)
         Pointer(currentAngle = multiKnob.pointerAngle)
-        Touches(multiKnob.fingerPosition)
+        Touches(multiKnob.touches)
     }
 }
 
@@ -106,28 +110,47 @@ private fun Tick(modifier: Modifier = Modifier, length: Int, width: Int, color: 
 
 
 @Composable
-private fun Touches(fingerPos: List<Float>) {
-    for (i in fingerPos.indices) {
-        Touch(modifier = Modifier.fillMaxSize().rotate(fingerPos[i] / 2), fingerPos[i] / 2)
+private fun Touches(touches: List<Touch>) {
+    for (touch in touches) {
+        Touch(
+            modifier = Modifier
+                .fillMaxSize()
+                .rotate(touch.position / 2),
+            touch
+        )
     }
 }
 
 @Composable
-private fun Touch(modifier: Modifier = Modifier.fillMaxSize(), currentAngle: Float) {
+private fun Touch(modifier: Modifier = Modifier.fillMaxSize(),  touch: Touch) {
+    val animatedWidth = remember { Animatable(initialValue = (6 * touch.channels * SIZE).toFloat()) }
+
+    LaunchedEffect(touch.channels) {
+        animatedWidth.animateTo((6 * touch.channels * SIZE).toFloat())
+    }
+
     Box(
-        modifier = modifier.size((100 * SIZE).dp, (100 * SIZE).dp).rotate(currentAngle)
+        modifier = modifier.size((100 * SIZE).dp, (100 * SIZE).dp).rotate(touch.position / 2)
     ) {
         Tick(
             modifier = Modifier
                 .align(Alignment.Center)
                 .offset(y = (120 * SIZE).dp),
             3 * SIZE,
-            20 * SIZE,
-            Color.Green
+            animatedWidth.value.toInt(),
+            getColorFromInt((touch.weight).toFloat())
         )
     }
 }
 
 
 
+fun getColorFromInt(value: Float): Color {
+    val maxValue = 6000f
+    val valueInRange = value.coerceIn(0f, maxValue)
 
+    val red = (255 * (valueInRange/maxValue)).toInt()
+    val green = (255 * (1 - valueInRange/maxValue)).toInt()
+
+    return Color(red = red, green = green, blue = 0)
+}

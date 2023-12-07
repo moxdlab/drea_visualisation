@@ -113,12 +113,12 @@ class SerialConnection {
                                     //Finger count
                                     val fingerCount = fields[2]
                                     //Finger pos
-                                    val fingerPositions = mutableListOf<Float>()
+                                    val touches = mutableListOf<Touch>()
                                     for (i in 0 until fields[2]) {
-                                        fingerPositions.add(fields[3 + i].toFloat() / 100)
+                                        touches.add(Touch(fields[3 + i*3].toFloat() / 100, fields[4 + i*3], fields[5 + i*3]))
                                     }
 
-                                    multiKnob.value = MultiKnob(fingerCount, angle, fingerPositions, pressed)
+                                    multiKnob.value = MultiKnob(fingerCount, angle, touches, pressed)
                                 } else {
                                     println("Error: False package length")
                                 }
