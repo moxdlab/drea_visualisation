@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.moxdlab"
-version = "1.0-SNAPSHOT"
+version = "1.1-SNAPSHOT"
 
 repositories {
     google()
@@ -42,7 +42,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "MultiKnob Visualisation"
-            packageVersion = "1.0.0"
+            packageVersion = "1.1.0"
         }
     }
 }
