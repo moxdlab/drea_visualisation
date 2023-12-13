@@ -16,6 +16,7 @@ class SerialConnection {
     }
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
+    private var timeOutJob: Job? = null
 
     private val multiKnob = MutableStateFlow(MultiKnob(0, 0f, listOf(), false))
     fun getMultiKnob(): StateFlow<MultiKnob> = multiKnob.asStateFlow()
@@ -58,6 +59,7 @@ class SerialConnection {
 
     fun disconnectFromPort(){
         if (serialPort != null && serialPort!!.isOpened) {
+            timeOutJob?.cancel()
             serialPort?.removeEventListener()
             serialPort?.closePort()
             serialPort = null
@@ -82,7 +84,7 @@ class SerialConnection {
         var counter = 0
 
         var timeOut = TIME_OUT_SECONDS
-        coroutineScope.launch {
+        timeOutJob = coroutineScope.launch {
             while (isActive){
                 if (timeOut==0){
                     println("TimeOut")
